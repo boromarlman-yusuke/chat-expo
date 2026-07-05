@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>魚心 お持ち帰りメニュー</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #23201b;
+    --sub: #857f74;
+    --line: #e6e1d7;
+    --accent: #b5473b;
+    --accent-ink: #ffffff;
+    --p220: #f2efe8;
+    --p350: #eaf1ec;
+    --p400: #fbe3e4;
+    --p590: #fdf3d6;
+    --bucket: #eef1f6;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 18px rgba(0,0,0,.04);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: calc(140px + var(--safe-b));
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 14px 16px 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand h1 { font-size: 20px; margin: 0; letter-spacing: .06em; font-weight: 700; }
+  .brand .en { font-size: 12px; opacity: .85; letter-spacing: .12em; }
+  .brand .sub { font-size: 12px; opacity: .9; margin-top: 2px; }
+
+  nav.tabs {
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px 12px;
+    position: sticky; top: 56px; z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    -webkit-overflow-scrolling: touch;
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto; border: 1px solid var(--line); background: var(--card);
+    color: var(--ink); padding: 7px 14px; border-radius: 999px; font-size: 13px;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  main { padding: 8px 12px 0; max-width: 720px; margin: 0 auto; }
+
+  .section { margin: 18px 0 6px; }
+  .section-head {
+    display: flex; align-items: center; gap: 8px; margin: 6px 2px 10px;
+  }
+  .pricetag {
+    font-size: 14px; font-weight: 700; padding: 4px 12px; border-radius: 8px;
+  }
+  .pricetag.p220 { background: var(--p220); }
+  .pricetag.p350 { background: var(--p350); }
+  .pricetag.p400 { background: var(--p400); }
+  .pricetag.p590 { background: var(--p590); }
+  .pricetag.bucket { background: var(--bucket); }
+  .section-note { font-size: 12px; color: var(--sub); }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 520px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s;
+  }
+  .item.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, var(--shadow); }
+  .item .info { flex: 1; min-width: 0; }
+  .item .name { font-size: 15px; font-weight: 600; }
+  .item .desc { font-size: 11px; color: var(--sub); margin-top: 1px; }
+  .item .price { font-size: 12px; color: var(--sub); margin-top: 1px; }
+
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button {
+    width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line);
+    background: #fff; font-size: 20px; line-height: 1; cursor: pointer; color: var(--ink);
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .stepper button:active { transform: scale(.94); }
+  .stepper button.plus { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .stepper .qty { min-width: 22px; text-align: center; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stepper button.minus[disabled] { opacity: .35; cursor: default; }
+
+  /* footer bar */
+  .footer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: rgba(255,255,255,.96); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+    padding: 10px 14px calc(10px + var(--safe-b));
+    box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  }
+  .footer .row { display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; }
+  .totals { flex: 1; }
+  .totals .count { font-size: 13px; color: var(--sub); }
+  .totals .sum { font-size: 22px; font-weight: 800; letter-spacing: .02em; }
+  .totals .sum small { font-size: 13px; font-weight: 600; color: var(--sub); }
+  .btn {
+    border: none; border-radius: 12px; padding: 12px 16px; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.ghost { background: #efece5; color: var(--ink); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* modal */
+  .overlay {
+    position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.45);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .sheet {
+    background: var(--card); width: 100%; max-width: 720px;
+    border-radius: 18px 18px 0 0; padding: 16px 16px calc(20px + var(--safe-b));
+    max-height: 86vh; overflow: auto; box-shadow: 0 -10px 40px rgba(0,0,0,.25);
+  }
+  .sheet h2 { margin: 4px 0 12px; font-size: 17px; }
+  .sheet .close { float: right; background: none; border: none; font-size: 24px; color: var(--sub); cursor: pointer; }
+  textarea#outText {
+    width: 100%; height: 240px; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px; font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #faf8f4; color: var(--ink); resize: vertical; line-height: 1.6;
+  }
+  .sheet .actions { display: flex; gap: 10px; margin-top: 12px; }
+  .sheet .actions .btn { flex: 1; }
+  .empty { color: var(--sub); font-size: 14px; padding: 20px 0; text-align: center; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(160px + var(--safe-b)); transform: translateX(-50%);
+    background: #23201b; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 60;
+  }
+  .toast.show { opacity: .95; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>魚心</h1>
+    <span class="en">uoshin024</span>
+  </div>
+  <div class="sub">お持ち帰り 基本メニュー / 税込価格</div>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main id="menu"></main>
+
+<div class="footer">
+  <div class="row">
+    <div class="totals">
+      <div class="count" id="count">0点</div>
+      <div class="sum" id="sum">¥0 <small>(税込)</small></div>
+    </div>
+    <button class="btn ghost" id="clearBtn">クリア</button>
+    <button class="btn primary" id="outBtn">テキスト出力</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <button class="close" id="closeBtn" aria-label="閉じる">&times;</button>
+    <h2>ご注文内容</h2>
+    <textarea id="outText" readonly></textarea>
+    <div class="actions">
+      <button class="btn ghost" id="closeBtn2">閉じる</button>
+      <button class="btn primary" id="copyBtn">コピー</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---- メニューデータ ---- */
+const MENU = [
+  {
+    id: "p220", label: "220円", price: 220, cls: "p220",
+    items: [
+      "やりいか","甘えび","むしえび","たこ","生げそ","びんちょう","びんちょうマヨ炙り",
+      "サーモン","サーモンマヨ","つぶ貝","〆さば","〆こはだ","さわらの昆布〆","たまご",
+      "ハム","おいなりさん","生赤えび(一貫)","芽ネギ(一貫)","炙りカモ肉","浅漬けなす","浅漬けきゅうり",
+      "コーン","シーチキン","ネギトロ","納豆","TNG","海鮮サラダ","塩麹サーモン","サーモンチャンジャ",
+      "ふわふわシャケ軍艦","やみつきサーモン軍艦","たこ柚子塩","梅たこ軍艦","イカオクラ",
+      "かっぱ巻","おしんこ巻","かんぴょう巻","しそ巻","ごぼう巻"
+    ]
+  },
+  {
+    id: "p350", label: "350円", price: 350, cls: "p350",
+    items: [
+      "ぶり","炙りぶり","トロサーモン","炙りトロサーモン","炙りチーズサーモン","えんがわ",
+      "スルメイカ","炙りがつお","ほたて","ぶりトロ(一貫)","本マグロトロ(一貫)","エンわさ軍艦",
+      "ぶりたたき軍艦","ネギぶり","まかないトロサーモン","いわしの梅煮","辛子明太子","中落ち(一貫)"
+    ]
+  },
+  {
+    id: "p400", label: "400円", price: 400, cls: "p400",
+    items: [
+      "うなぎ","煮あなご","まぐろ","真鯛","赤貝","福井名水サーモン","生あじ","モンゴウイカ",
+      "数の子","焼きさば","炙りのどぐろ","炙り金目鯛","柚子ぶり","鉄火巻",
+      "まかないマグロ軍艦","うなたま軍艦","うに","いくら","かにみそ"
+    ]
+  },
+  {
+    id: "p590", label: "590円", price: 590, cls: "p590",
+    items: [
+      { name: "かに身(一貫)" },
+      { name: "ゆたか(三貫盛り)", desc: "ぶり・えんがわ・サーモン" },
+      { name: "ほがらか(三貫盛り)", desc: "ぶり・スルメイカ・生赤えび" },
+      { name: "サーモン三種(三貫盛り)", desc: "サーモン・トロサーモン・炙りトロサーモン" }
+    ]
+  },
+  {
+    id: "bucket", label: "お持ち帰り桶", cls: "bucket", note: "皿数に応じた持ち帰り用の桶",
+    items: [
+      { name: "3皿桶", price: 50 },
+      { name: "6皿桶", price: 50 },
+      { name: "8皿桶", price: 100 },
+      { name: "10皿桶", price: 100 },
+      { name: "15皿桶", price: 150 },
+      { name: "20皿桶", price: 150 },
+      { name: "30皿桶", price: 200 }
+    ]
+  }
+];
+
+/* ---- 状態 ---- */
+const state = {}; // key -> {name, price, qty, groupLabel}
+function keyOf(gid, name) { return gid + "|" + name; }
+function yen(n) { return "¥" + n.toLocaleString("ja-JP"); }
+
+/* ---- 描画 ---- */
+const menuEl = document.getElementById("menu");
+const tabsEl = document.getElementById("tabs");
+
+MENU.forEach(group => {
+  // tab
+  const tab = document.createElement("button");
+  tab.className = "tab";
+  tab.textContent = group.label;
+  tab.dataset.target = "sec-" + group.id;
+  tab.addEventListener("click", () => {
+    document.getElementById("sec-" + group.id).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  tabsEl.appendChild(tab);
+
+  // section
+  const sec = document.createElement("section");
+  sec.className = "section";
+  sec.id = "sec-" + group.id;
+
+  const head = document.createElement("div");
+  head.className = "section-head";
+  const tag = document.createElement("span");
+  tag.className = "pricetag " + group.cls;
+  tag.textContent = group.price ? group.label + " (税込)" : group.label;
+  head.appendChild(tag);
+  if (group.note) {
+    const note = document.createElement("span");
+    note.className = "section-note";
+    note.textContent = group.note;
+    head.appendChild(note);
+  }
+  sec.appendChild(head);
+
+  const grid = document.createElement("div");
+  grid.className = "grid";
+
+  group.items.forEach(raw => {
+    const item = typeof raw === "string" ? { name: raw } : raw;
+    const price = item.price != null ? item.price : group.price;
+    const k = keyOf(group.id, item.name);
+
+    const card = document.createElement("div");
+    card.className = "item";
+    card.dataset.key = k;
+
+    const info = document.createElement("div");
+    info.className = "info";
+    const nm = document.createElement("div");
+    nm.className = "name";
+    nm.textContent = item.name;
+    info.appendChild(nm);
+    if (item.desc) {
+      const d = document.createElement("div");
+      d.className = "desc";
+      d.textContent = item.desc;
+      info.appendChild(d);
+    }
+    const pr = document.createElement("div");
+    pr.className = "price";
+    pr.textContent = yen(price);
+    info.appendChild(pr);
+    card.appendChild(info);
+
+    const stepper = document.createElement("div");
+    stepper.className = "stepper";
+    const minus = document.createElement("button");
+    minus.className = "minus"; minus.textContent = "−"; minus.disabled = true;
+    const qty = document.createElement("span");
+    qty.className = "qty"; qty.textContent = "0";
+    const plus = document.createElement("button");
+    plus.className = "plus"; plus.textContent = "+";
+
+    minus.addEventListener("click", () => changeQty(group, item, price, -1, card, qty, minus));
+    plus.addEventListener("click", () => changeQty(group, item, price, +1, card, qty, minus));
+
+    stepper.appendChild(minus);
+    stepper.appendChild(qty);
+    stepper.appendChild(plus);
+    card.appendChild(stepper);
+
+    grid.appendChild(card);
+  });
+
+  sec.appendChild(grid);
+  menuEl.appendChild(sec);
+});
+
+function changeQty(group, item, price, delta, card, qtyEl, minusEl) {
+  const k = keyOf(group.id, item.name);
+  const cur = state[k] ? state[k].qty : 0;
+  const next = Math.max(0, cur + delta);
+  if (next === 0) {
+    delete state[k];
+  } else {
+    state[k] = { name: item.name, price, qty: next, groupLabel: group.label, desc: item.desc || "" };
+  }
+  qtyEl.textContent = next;
+  minusEl.disabled = next === 0;
+  card.classList.toggle("selected", next > 0);
+  updateTotals();
+}
+
+/* ---- 合計 ---- */
+const countEl = document.getElementById("count");
+const sumEl = document.getElementById("sum");
+const outBtn = document.getElementById("outBtn");
+const clearBtn = document.getElementById("clearBtn");
+
+function updateTotals() {
+  let count = 0, sum = 0;
+  Object.values(state).forEach(e => { count += e.qty; sum += e.qty * e.price; });
+  countEl.textContent = count + "点";
+  sumEl.innerHTML = yen(sum) + ' <small>(税込)</small>';
+  outBtn.disabled = count === 0;
+  clearBtn.disabled = count === 0;
+}
+updateTotals();
+
+/* ---- クリア ---- */
+clearBtn.addEventListener("click", () => {
+  if (!Object.keys(state).length) return;
+  if (!confirm("選択をすべてクリアしますか？")) return;
+  Object.keys(state).forEach(k => delete state[k]);
+  document.querySelectorAll(".item.selected").forEach(card => {
+    card.classList.remove("selected");
+    card.querySelector(".qty").textContent = "0";
+    card.querySelector(".minus").disabled = true;
+  });
+  updateTotals();
+});
+
+/* ---- テキスト出力 ---- */
+function buildText() {
+  const lines = [];
+  lines.push("【魚心 お持ち帰りご注文】");
+  lines.push("");
+  let count = 0, sum = 0;
+  MENU.forEach(group => {
+    const rows = Object.entries(state)
+      .filter(([k]) => k.startsWith(group.id + "|"))
+      .map(([, e]) => e);
+    if (!rows.length) return;
+    lines.push("■ " + group.label);
+    rows.forEach(e => {
+      count += e.qty; sum += e.qty * e.price;
+      lines.push("  ・" + e.name + " × " + e.qty + "　" + yen(e.price * e.qty));
+    });
+    lines.push("");
+  });
+  lines.push("―――――――――――");
+  lines.push("合計 " + count + "点　" + yen(sum) + "（税込）");
+  return lines.join("\n");
+}
+
+const overlay = document.getElementById("overlay");
+const outText = document.getElementById("outText");
+document.getElementById("outBtn").addEventListener("click", () => {
+  if (outBtn.disabled) return;
+  outText.value = buildText();
+  overlay.classList.add("open");
+});
+function closeSheet() { overlay.classList.remove("open"); }
+document.getElementById("closeBtn").addEventListener("click", closeSheet);
+document.getElementById("closeBtn2").addEventListener("click", closeSheet);
+overlay.addEventListener("click", e => { if (e.target === overlay) closeSheet(); });
+
+/* ---- コピー ---- */
+const toast = document.getElementById("toast");
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 1600);
+}
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const text = outText.value;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("コピーしました");
+  } catch (e) {
+    outText.removeAttribute("readonly");
+    outText.select();
+    document.execCommand("copy");
+    outText.setAttribute("readonly", "");
+    showToast("コピーしました");
+  }
+});
+</script>
+</body>
+</html>
