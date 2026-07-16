@@ -14,11 +14,12 @@
     --line: #dfe6df;
     --accent: #1f8f86;
     --accent-ink: #ffffff;
-    --hour: #e8874a;
-    --minute: #1f8f86;
+    --hour: #e6532c;
+    --minute: #1c64e0;
     --good: #2ea86b;
     --bad: #e0495c;
-    --hole: var(--bg);
+    --attack: #e0495c;
+    --attack-ink: #ffffff;
     --shadow: 0 1px 2px rgba(20,30,25,.06), 0 10px 26px rgba(20,30,25,.08);
     --safe-b: env(safe-area-inset-bottom, 0px);
   }
@@ -32,10 +33,12 @@
       --line: #2c463c;
       --accent: #ffd76a;
       --accent-ink: #1c2b28;
-      --hour: #ffb06a;
-      --minute: #ffd76a;
+      --hour: #ff8a50;
+      --minute: #6fb3ff;
       --good: #8bd17c;
       --bad: #ff8f85;
+      --attack: #ff8f85;
+      --attack-ink: #1c2b28;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 26px rgba(0,0,0,.35);
     }
   }
@@ -48,10 +51,12 @@
     --line: #2c463c;
     --accent: #ffd76a;
     --accent-ink: #1c2b28;
-    --hour: #ffb06a;
-    --minute: #ffd76a;
+    --hour: #ff8a50;
+    --minute: #6fb3ff;
     --good: #8bd17c;
     --bad: #ff8f85;
+    --attack: #ff8f85;
+    --attack-ink: #1c2b28;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 26px rgba(0,0,0,.35);
   }
   :root[data-theme="light"] {
@@ -63,10 +68,12 @@
     --line: #dfe6df;
     --accent: #1f8f86;
     --accent-ink: #ffffff;
-    --hour: #e8874a;
-    --minute: #1f8f86;
+    --hour: #e6532c;
+    --minute: #1c64e0;
     --good: #2ea86b;
     --bad: #e0495c;
+    --attack: #e0495c;
+    --attack-ink: #ffffff;
     --shadow: 0 1px 2px rgba(20,30,25,.06), 0 10px 26px rgba(20,30,25,.08);
   }
 
@@ -105,11 +112,40 @@
     margin-top: 4px;
   }
 
+  .modebar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0 8px;
+  }
+  .modebtn {
+    border: 1.5px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .modebtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .modebtn.practice.active {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .modebtn.attack.active {
+    background: var(--attack);
+    color: var(--attack-ink);
+    border-color: var(--attack);
+  }
+
   .levelbar {
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin: 16px 0 6px;
+    margin: 0 0 6px;
     flex-wrap: wrap;
   }
   .levelbtn {
@@ -134,7 +170,7 @@
     display: flex;
     justify-content: center;
     gap: 4px;
-    margin: 2px 0 18px;
+    margin: 2px 0 14px;
     font-size: 12px;
     color: var(--sub);
     font-variant-numeric: tabular-nums;
@@ -143,11 +179,47 @@
   .scorebar .cell:last-child { border-right: none; }
   .scorebar b { color: var(--ink); font-size: 15px; display: block; font-weight: 800; }
 
+  .timerRow {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 0 16px;
+  }
+  .timerRow.hidden { display: none; }
+  .timerNum {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--attack);
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+  }
+  .timerRow.urgent .timerNum { animation: tick .5s infinite; }
+  .timerBar {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .timerFill {
+    height: 100%;
+    background: var(--attack);
+    border-radius: 999px;
+    transition: width 1s linear;
+  }
+  @keyframes tick {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timerRow.urgent .timerNum { animation: none; }
+  }
+
   .clockwrap {
     position: relative;
     width: min(64vw, 260px);
     height: min(64vw, 260px);
-    margin: 4px 0 22px;
+    margin: 4px 0 12px;
   }
   .clockwrap.shake { animation: shake .35s; }
   @keyframes shake {
@@ -175,8 +247,23 @@
   .num { fill: var(--ink); font-size: 15px; font-weight: 800; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
   .hand { stroke-linecap: round; }
   .hand.hour { stroke: var(--hour); stroke-width: 7; }
-  .hand.minute { stroke: var(--minute); stroke-width: 4.5; }
+  .hand.minute { stroke: var(--minute); stroke-width: 4; }
   .pivot { fill: var(--ink); }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sub);
+    margin: 0 0 16px;
+    flex-wrap: wrap;
+  }
+  .legend .item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 20px; height: 4px; border-radius: 999px; display: inline-block; }
+  .legend .swatch.hour { background: var(--hour); }
+  .legend .swatch.minute { background: var(--minute); }
 
   .question {
     font-size: 17px;
@@ -239,6 +326,46 @@
     font-size: 12px;
     color: var(--sub);
   }
+
+  .overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(10,16,14,.55);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .resultcard {
+    background: var(--board);
+    border-radius: 22px;
+    padding: 28px 26px calc(24px);
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .result-title { font-size: 20px; font-weight: 800; margin-bottom: 14px; }
+  .result-score { font-size: 15px; color: var(--sub); margin-bottom: 4px; }
+  .result-score b { font-size: 40px; color: var(--attack); display: block; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .result-sub { font-size: 13px; color: var(--sub); margin-bottom: 22px; font-variant-numeric: tabular-nums; }
+  .result-sub b { color: var(--ink); }
+  .result-actions { display: flex; flex-direction: column; gap: 10px; }
+  .bigbtn {
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    background: var(--attack);
+    color: var(--attack-ink);
+  }
+  .bigbtn.ghost {
+    background: transparent;
+    color: var(--sub);
+    border: 1.5px solid var(--line);
+  }
+  .bigbtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -248,6 +375,11 @@
     <div class="sub">とけいを みて、あう じかんを タップしよう！</div>
   </header>
 
+  <div class="modebar" id="modebar">
+    <button class="modebtn practice active" id="practiceBtn">れんしゅう</button>
+    <button class="modebtn attack" id="attackBtn">⚡ タイムアタック</button>
+  </div>
+
   <div class="levelbar" id="levelbar"></div>
 
   <div class="scorebar" id="scorebar">
@@ -256,8 +388,18 @@
     <div class="cell">れんぞく<b id="scoreStreak">0</b></div>
   </div>
 
+  <div class="timerRow hidden" id="timerRow">
+    <div class="timerNum">⏱ のこり <span id="timerNum">60</span> びょう</div>
+    <div class="timerBar"><div class="timerFill" id="timerFill"></div></div>
+  </div>
+
   <div class="clockwrap" id="clockwrap">
     <svg id="clockface" viewBox="0 0 200 200"></svg>
+  </div>
+
+  <div class="legend">
+    <span class="item"><span class="swatch hour"></span>みじかいはり＝なんじ</span>
+    <span class="item"><span class="swatch minute"></span>ながいはり＝なんふん</span>
   </div>
 
   <div class="question">いま なんじ？</div>
@@ -267,6 +409,18 @@
   <div class="feedback" id="feedback">&nbsp;</div>
 
   <footer>こたえを タップすると すぐ つぎの もんだいが でるよ</footer>
+</div>
+
+<div class="overlay" id="resultOverlay">
+  <div class="resultcard">
+    <div class="result-title">⏰ タイムアップ！</div>
+    <div class="result-score">せいかいした もんだい<b id="resultGood">0</b></div>
+    <div class="result-sub">さいこうきろく <b id="resultBest">0</b> もん</div>
+    <div class="result-actions">
+      <button class="bigbtn" id="retryBtn">もういちど</button>
+      <button class="bigbtn ghost" id="backBtn">れんしゅうにもどる</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -280,11 +434,18 @@ const LEVELS = [
   { id: 2, label: "②はん", minutes: [0, 30] },
   { id: 3, label: "③5ふんきざみ", minutes: [0,5,10,15,20,25,30,35,40,45,50,55] }
 ];
+const ATTACK_SECONDS = 60;
 
 let currentLevel = LEVELS[0];
 let currentAnswer = null;
 let locked = false;
 let good = 0, total = 0, streak = 0;
+let mode = "practice"; // "practice" | "attack"
+let roundActive = true;
+let timeLeft = ATTACK_SECONDS;
+let attackTimer = null;
+let bestScore = 0;
+try { bestScore = Number(localStorage.getItem("clockAttackBest") || 0); } catch (e) {}
 
 const levelbar = document.getElementById("levelbar");
 LEVELS.forEach((lv, i) => {
@@ -293,7 +454,7 @@ LEVELS.forEach((lv, i) => {
   b.textContent = lv.label;
   b.addEventListener("click", () => {
     currentLevel = lv;
-    document.querySelectorAll(".levelbtn").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".levelbtn").forEach(elm => elm.classList.remove("active"));
     b.classList.add("active");
     nextQuestion();
   });
@@ -391,10 +552,19 @@ const feedbackEl = document.getElementById("feedback");
 const scoreGoodEl = document.getElementById("scoreGood");
 const scoreTotalEl = document.getElementById("scoreTotal");
 const scoreStreakEl = document.getElementById("scoreStreak");
+const timerRow = document.getElementById("timerRow");
+const timerNumEl = document.getElementById("timerNum");
+const timerFillEl = document.getElementById("timerFill");
+const resultOverlay = document.getElementById("resultOverlay");
+const resultGoodEl = document.getElementById("resultGood");
+const resultBestEl = document.getElementById("resultBest");
+const practiceBtn = document.getElementById("practiceBtn");
+const attackBtn = document.getElementById("attackBtn");
 
 function nextQuestion() {
+  if (mode === "attack" && !roundActive) return;
   locked = false;
-  feedbackEl.textContent = " ";
+  feedbackEl.textContent = " ";
   feedbackEl.className = "feedback";
   currentAnswer = randomTime();
   setHands(currentAnswer.hour, currentAnswer.minute);
@@ -452,8 +622,73 @@ function onAnswer(btn, t) {
   setTimeout(nextQuestion, isCorrect ? 900 : 1800);
 }
 
+/* ---- モード切り替え／タイムアタック ---- */
+function updateTimerUI() {
+  timerNumEl.textContent = timeLeft;
+  timerFillEl.style.width = (timeLeft / ATTACK_SECONDS * 100) + "%";
+  timerRow.classList.toggle("urgent", timeLeft <= 10);
+}
+
+function tickAttack() {
+  timeLeft--;
+  updateTimerUI();
+  if (timeLeft <= 0) {
+    clearInterval(attackTimer);
+    endAttack();
+  }
+}
+
+function startAttack() {
+  mode = "attack";
+  roundActive = true;
+  good = 0; total = 0; streak = 0; timeLeft = ATTACK_SECONDS;
+  scoreGoodEl.textContent = good;
+  scoreTotalEl.textContent = total;
+  scoreStreakEl.textContent = streak;
+  timerRow.classList.remove("hidden");
+  updateTimerUI();
+  resultOverlay.classList.remove("show");
+  clearInterval(attackTimer);
+  attackTimer = setInterval(tickAttack, 1000);
+  practiceBtn.classList.remove("active");
+  attackBtn.classList.add("active");
+  nextQuestion();
+}
+
+function endAttack() {
+  roundActive = false;
+  locked = true;
+  document.querySelectorAll(".choice").forEach(elm => elm.disabled = true);
+  if (good > bestScore) {
+    bestScore = good;
+    try { localStorage.setItem("clockAttackBest", String(bestScore)); } catch (e) {}
+  }
+  resultGoodEl.textContent = good;
+  resultBestEl.textContent = bestScore;
+  resultOverlay.classList.add("show");
+}
+
+function startPractice() {
+  mode = "practice";
+  roundActive = true;
+  clearInterval(attackTimer);
+  timerRow.classList.add("hidden");
+  resultOverlay.classList.remove("show");
+  practiceBtn.classList.add("active");
+  attackBtn.classList.remove("active");
+  good = 0; total = 0; streak = 0;
+  scoreGoodEl.textContent = good;
+  scoreTotalEl.textContent = total;
+  scoreStreakEl.textContent = streak;
+  nextQuestion();
+}
+
+practiceBtn.addEventListener("click", startPractice);
+attackBtn.addEventListener("click", startAttack);
+document.getElementById("retryBtn").addEventListener("click", startAttack);
+document.getElementById("backBtn").addEventListener("click", startPractice);
+
 nextQuestion();
 </script>
-
 </body>
 </html>
