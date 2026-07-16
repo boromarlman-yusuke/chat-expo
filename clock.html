@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>とけいのべんきょう フラッシュカード</title>
+<style>
+  :root {
+    --bg: #fff7e6;
+    --card: #ffffff;
+    --ink: #2b2620;
+    --sub: #8a8175;
+    --line: #efe4cc;
+    --accent: #ff8a3d;
+    --accent-ink: #ffffff;
+    --good: #3fb96a;
+    --bad: #ef5b5b;
+    --face: #ffffff;
+    --face-line: #d8b98a;
+    --shadow: 0 2px 6px rgba(0,0,0,.06), 0 10px 24px rgba(0,0,0,.06);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--safe-b);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  header {
+    padding: 16px 16px 8px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: .04em;
+  }
+  header .sub {
+    font-size: 13px;
+    color: var(--sub);
+    margin-top: 2px;
+  }
+
+  .levelbar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+  .levelbtn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .levelbtn.active {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+
+  .scorebar {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    padding: 4px 12px 6px;
+    font-size: 14px;
+    color: var(--sub);
+  }
+  .scorebar b { color: var(--ink); font-size: 16px; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px 16px 24px;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .clockwrap {
+    position: relative;
+    width: min(72vw, 300px);
+    height: min(72vw, 300px);
+    margin: 8px 0 20px;
+  }
+  .clockwrap.shake { animation: shake .35s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(9px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(4px); }
+  }
+  .clockwrap.pop { animation: pop .35s; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  svg#clockface { width: 100%; height: 100%; display: block; filter: var(--shadow) drop-shadow(0 6px 16px rgba(0,0,0,.08)); }
+  .face-circle { fill: var(--face); stroke: var(--face-line); stroke-width: 3; }
+  .tick-major { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+  .tick-minor { stroke: var(--face-line); stroke-width: 1.5; stroke-linecap: round; }
+  .num { fill: var(--ink); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .hand { stroke-linecap: round; }
+  .hand.hour { stroke: var(--ink); stroke-width: 7; }
+  .hand.minute { stroke: var(--accent); stroke-width: 5; }
+  .pivot { fill: var(--ink); }
+
+  .question {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    text-align: center;
+  }
+
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+  .choice {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 8px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: .02em;
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform .1s, border-color .15s, background .15s;
+  }
+  .choice:active { transform: scale(.96); }
+  .choice[disabled] { cursor: default; }
+  .choice.correct { background: var(--good); border-color: var(--good); color: #fff; }
+  .choice.wrong { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .choice.dim { opacity: .45; }
+
+  .feedback {
+    min-height: 34px;
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+  }
+  .feedback.good { color: var(--good); }
+  .feedback.bad { color: var(--bad); }
+
+  footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    color: var(--sub);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>⏰ とけいの べんきょう</h1>
+  <div class="sub">とけいを みて、あう じかんを タップしよう！</div>
+</header>
+
+<div class="levelbar" id="levelbar"></div>
+
+<div class="scorebar">
+  <div>せいかい <b id="scoreGood">0</b></div>
+  <div>もんだい <b id="scoreTotal">0</b></div>
+  <div>れんぞく <b id="scoreStreak">0</b></div>
+</div>
+
+<main>
+  <div class="clockwrap" id="clockwrap">
+    <svg id="clockface" viewBox="0 0 200 200"></svg>
+  </div>
+
+  <div class="question">いま なんじ？</div>
+
+  <div class="choices" id="choices"></div>
+
+  <div class="feedback" id="feedback">&nbsp;</div>
+</main>
+
+<footer>こたえを タップすると すぐ つぎの もんだいが でるよ</footer>
+
+<script>
+/* ---- レベル定義 ----
+   1: ちょうど（〇じ）
+   2: 〇じ / 〇じはん
+   3: 5ふん きざみ ぜんぶ
+*/
+const LEVELS = [
+  { id: 1, label: "①ちょうど", minutes: [0] },
+  { id: 2, label: "②はん", minutes: [0, 30] },
+  { id: 3, label: "③5ふんきざみ", minutes: [0,5,10,15,20,25,30,35,40,45,50,55] }
+];
+
+let currentLevel = LEVELS[0];
+let currentAnswer = null; // {hour, minute}
+let locked = false;
+let good = 0, total = 0, streak = 0;
+
+const levelbar = document.getElementById("levelbar");
+LEVELS.forEach(lv => {
+  const b = document.createElement("button");
+  b.className = "levelbtn";
+  b.textContent = lv.label;
+  b.addEventListener("click", () => {
+    currentLevel = lv;
+    document.querySelectorAll(".levelbtn").forEach(el => el.classList.remove("active"));
+    b.classList.add("active");
+    nextQuestion();
+  });
+  levelbar.appendChild(b);
+});
+levelbar.children[0].classList.add("active");
+
+/* ---- 時計盤の描画 ---- */
+const svg = document.getElementById("clockface");
+const CX = 100, CY = 100, R = 92;
+
+function polar(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function buildFace() {
+  svg.innerHTML = "";
+  const face = document.createElementNS(svg.namespaceURI, "circle");
+  face.setAttribute("cx", CX); face.setAttribute("cy", CY); face.setAttribute("r", R);
+  face.setAttribute("class", "face-circle");
+  svg.appendChild(face);
+
+  for (let i = 0; i < 60; i++) {
+    const deg = i * 6;
+    const major = i % 5 === 0;
+    const p1 = polar(CX, CY, R - (major ? 14 : 8), deg);
+    const p2 = polar(CX, CY, R - 3, deg);
+    const line = document.createElementNS(svg.namespaceURI, "line");
+    line.setAttribute("x1", p1.x); line.setAttribute("y1", p1.y);
+    line.setAttribute("x2", p2.x); line.setAttribute("y2", p2.y);
+    line.setAttribute("class", major ? "tick-major" : "tick-minor");
+    svg.appendChild(line);
+  }
+
+  for (let n = 1; n <= 12; n++) {
+    const p = polar(CX, CY, R - 28, n * 30);
+    const t = document.createElementNS(svg.namespaceURI, "text");
+    t.setAttribute("x", p.x); t.setAttribute("y", p.y);
+    t.setAttribute("class", "num");
+    t.textContent = n;
+    svg.appendChild(t);
+  }
+
+  const hourHand = document.createElementNS(svg.namespaceURI, "line");
+  hourHand.setAttribute("id", "hourHand");
+  hourHand.setAttribute("class", "hand hour");
+  hourHand.setAttribute("x1", CX); hourHand.setAttribute("y1", CY);
+  svg.appendChild(hourHand);
+
+  const minHand = document.createElementNS(svg.namespaceURI, "line");
+  minHand.setAttribute("id", "minHand");
+  minHand.setAttribute("class", "hand minute");
+  minHand.setAttribute("x1", CX); minHand.setAttribute("y1", CY);
+  svg.appendChild(minHand);
+
+  const pivot = document.createElementNS(svg.namespaceURI, "circle");
+  pivot.setAttribute("cx", CX); pivot.setAttribute("cy", CY); pivot.setAttribute("r", 5);
+  pivot.setAttribute("class", "pivot");
+  svg.appendChild(pivot);
+}
+buildFace();
+
+function setHands(hour, minute) {
+  const hourDeg = ((hour % 12) + minute / 60) * 30;
+  const minDeg = minute * 6;
+  const hp = polar(CX, CY, R * 0.5, hourDeg);
+  const mp = polar(CX, CY, R * 0.75, minDeg);
+  document.getElementById("hourHand").setAttribute("x2", hp.x);
+  document.getElementById("hourHand").setAttribute("y2", hp.y);
+  document.getElementById("minHand").setAttribute("x2", mp.x);
+  document.getElementById("minHand").setAttribute("y2", mp.y);
+}
+
+/* ---- 問題生成 ---- */
+function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function labelOf(h, m) {
+  return m === 0 ? h + "じ" : h + "じ" + m + "ふん";
+}
+
+function randomTime() {
+  const hour = 1 + Math.floor(Math.random() * 12);
+  const minute = randItem(currentLevel.minutes);
+  return { hour, minute };
+}
+
+function sameTime(a, b) { return a.hour === b.hour && a.minute === b.minute; }
+
+function buildChoices(answer) {
+  const list = [answer];
+  let guard = 0;
+  while (list.length < 4 && guard < 200) {
+    guard++;
+    let cand;
+    const roll = Math.random();
+    if (roll < 0.5) {
+      // まぎらわしい：おなじ「ふん」で ちがう「じ」
+      let h = answer.hour + (Math.random() < 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 3));
+      h = ((h - 1) % 12 + 12) % 12 + 1;
+      cand = { hour: h, minute: answer.minute };
+    } else if (roll < 0.85 && currentLevel.minutes.length > 1) {
+      // まぎらわしい：おなじ「じ」で ちがう「ふん」
+      cand = { hour: answer.hour, minute: randItem(currentLevel.minutes) };
+    } else {
+      cand = randomTime();
+    }
+    if (!list.some(t => sameTime(t, cand))) list.push(cand);
+  }
+  // シャッフル
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+const clockwrap = document.getElementById("clockwrap");
+const choicesEl = document.getElementById("choices");
+const feedbackEl = document.getElementById("feedback");
+const scoreGoodEl = document.getElementById("scoreGood");
+const scoreTotalEl = document.getElementById("scoreTotal");
+const scoreStreakEl = document.getElementById("scoreStreak");
+
+function nextQuestion() {
+  locked = false;
+  feedbackEl.textContent = " ";
+  feedbackEl.className = "feedback";
+  currentAnswer = randomTime();
+  setHands(currentAnswer.hour, currentAnswer.minute);
+
+  const choices = buildChoices(currentAnswer);
+  choicesEl.innerHTML = "";
+  choices.forEach(t => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = labelOf(t.hour, t.minute);
+    btn.addEventListener("click", () => onAnswer(btn, t));
+    choicesEl.appendChild(btn);
+  });
+}
+
+function onAnswer(btn, t) {
+  if (locked) return;
+  locked = true;
+  total++;
+  const isCorrect = sameTime(t, currentAnswer);
+
+  document.querySelectorAll(".choice").forEach(el => {
+    el.disabled = true;
+    if (el !== btn) el.classList.add("dim");
+  });
+
+  if (isCorrect) {
+    good++; streak++;
+    btn.classList.remove("dim");
+    btn.classList.add("correct");
+    feedbackEl.textContent = "◎ せいかい！";
+    feedbackEl.className = "feedback good";
+    clockwrap.classList.remove("shake"); clockwrap.classList.add("pop");
+    setTimeout(() => clockwrap.classList.remove("pop"), 350);
+  } else {
+    streak = 0;
+    btn.classList.remove("dim");
+    btn.classList.add("wrong");
+    document.querySelectorAll(".choice").forEach(el => {
+      if (el.textContent === labelOf(currentAnswer.hour, currentAnswer.minute)) {
+        el.classList.remove("dim");
+        el.classList.add("correct");
+      }
+    });
+    feedbackEl.textContent = "✕ おしい！ せいかいは " + labelOf(currentAnswer.hour, currentAnswer.minute);
+    feedbackEl.className = "feedback bad";
+    clockwrap.classList.remove("pop"); clockwrap.classList.add("shake");
+    setTimeout(() => clockwrap.classList.remove("shake"), 350);
+  }
+
+  scoreGoodEl.textContent = good;
+  scoreTotalEl.textContent = total;
+  scoreStreakEl.textContent = streak;
+
+  setTimeout(nextQuestion, isCorrect ? 900 : 1800);
+}
+
+nextQuestion();
+</script>
+</body>
+</html>
